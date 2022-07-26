@@ -10,7 +10,8 @@ import RxCocoa
 
 // input
 protocol CalculatorViewModelInputs {
-    var submitTrigger : PublishSubject<Void> { get }
+    func didTapNumberButton(tag: Int)
+    func didTapSymbolButton(tag: Int)
 }
 // output
 protocol CalculatorViewModelOutputs {
@@ -22,52 +23,53 @@ protocol CalculatorViewModelType {
     var outputs: CalculatorViewModelOutputs { get }
 }
 
-class CalculatorViewModel : CalculatorViewModelInputs, CalculatorViewModelOutputs, CalculatorViewModelType {
-    
-    var inputs : CalculatorViewModelInputs { return self }
-    var outputs : CalculatorViewModelOutputs { return self }
-    
-    // MARK: - Input
-    let submitTrigger = PublishSubject<Void>()
-    
-    // MARK: - Output
-    let calculationText : Driver<String>
+class CalculatorViewModel: CalculatorViewModelInputs, CalculatorViewModelOutputs {
 
-    let disposeBag = DisposeBag()
+    private let disposeBag = DisposeBag()
+    private let textRelay = BehaviorRelay<String>(value: "0")
     
-    private let numberSum = BehaviorRelay<Int>(value: 0)
-    
-    var number = 0
+    let model = CalculatorModel()
     
     init() {
-        
-        submitTrigger
-            .subscribe(onNext: { _ in
-                //number = number + button.tag
-                
-                //calculationResultLabel.text = "\(number)"
-                print("タップしたよ！")
-                
-            })
+        setupBinding()
+    }
+    
+    func setupBinding() {
+        model.valueRelay
+            //.map { String($0) }
+            .bind(to: textRelay)
             .disposed(by: disposeBag)
-        
-        calculationText = numberSum
-            .map { String("\(Double($0) / 10)") }
-            .asDriver(onErrorDriveWith: .empty())
-        
-        Observable<Int>.create { observer in
-            observer.onNext(1)
-            observer.onNext(2)
-            observer.onCompleted()
-            return Disposables.create()
-        }
-        
-    }
-         
-    
-    func aaa () {
-        print("aaaを呼び出し")
     }
     
+    var calculationText: Driver<String> {
+        textRelay.asDriver()
+    }
     
+    func didTapNumberButton(tag:Int) {
+        
+        model.numEntry(num: tag)
+    }
+    
+    func didTapSymbolButton(tag: Int) {
+        
+        model.symbolEntry(num: tag)
+    }
 }
+
+enum CalculatorSymbol: Int {
+    case dot = 10
+    case equal = 11
+    case plus = 12
+    case minus = 13
+    case multiply = 14
+    case divide = 15
+    case percent = 16
+    case plusminus = 17
+    case clear = 18
+}
+
+extension CalculatorViewModel: CalculatorViewModelType {
+    var inputs: CalculatorViewModelInputs { return self }
+    var outputs: CalculatorViewModelOutputs { return self }
+}
+
