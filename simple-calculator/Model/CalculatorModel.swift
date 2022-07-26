@@ -10,13 +10,15 @@ import RxCocoa
 
 class CalculatorModel {
 
-    var valueRelay = BehaviorRelay<String>(value: "")
+    var valueRelay = BehaviorRelay<String>(value: "0")
     //今回の値
     var thisValueStr:String = ""
     //合計値
     var sumValueStr:String = ""
     //押されている記号
     var symbolTapped: Int = 0  //0:無し, 1: +, 2: -, 3: ×, 4: ÷, 5
+    //記号ダブルタップ防止
+    var symbolTapFlg: Bool = false
     
     func numEntry(num: Int) {
         
@@ -25,125 +27,111 @@ class CalculatorModel {
         
         let numStr: String = String(num)
         
-        let valueStr2 = value + numStr
-        //今回
-        thisValueStr = valueStr2
-        
-        valueRelay.accept(thisValueStr)
-        
-    }
-    
-    func symbolEntry(num: Int)  {
-        
-        var value = valueRelay.value
-        value = thisValueStr
-        
-        switch num {
-        case 11:
-            print("tap: =")
-            
-            beforeSymbolTapped()
-            
-        case 12:
-            print("tap: +")
-            
-            beforeSymbolTapped()
-            symbolTapped = 1 //足し算
-            
-        case 13:
-            print("tap: -")
-            
-            beforeSymbolTapped()
-            symbolTapped = 2 //引き算
-            
-        case 14:
-            print("tap: ×")
-            beforeSymbolTapped()
-            symbolTapped = 3 //掛け算
-            
-            
-        case 15:
-            print("tap: ÷")
-            beforeSymbolTapped()
-            symbolTapped = 4 //割り算
-            
-            
-        case 16:
-            print("tap: %")
-        case 17:
-            print("tap: ±")
-            
-        case 18:
-            print("tap: C")
-            symbolTapped = 0
-            thisValueStr = ""
-            sumValueStr = ""
-            valueRelay.accept("0")
-            
-        default:
+        let valueStr2: String
+        if num < 10 {
+            print("tap: \(num)")
+            valueStr2 = value + numStr
+        } else {
+            // .
             print("tap: .")
-            print("value: \(value)")
-            
             let valueStr: String = String(value)
             let flg: Bool = valueStr.contains(".")
             guard flg == false else {
                 return
             }
-            let valueStr2 = valueStr + "."
-            valueRelay.accept(valueStr2)
+            valueStr2 = valueStr + "."
         }
+        
+        thisValueStr = valueStr2
+        valueRelay.accept(thisValueStr)
+        
+        //記号タップOK
+        symbolTapFlg = false
+        
+    }
+    
+    func symbolEntry(num: Int)  {
+        
+        if num == 18 {
+            //クリア
+            print("tap: C")
+            symbolTapped = 0
+            thisValueStr = ""
+            sumValueStr = ""
+            valueRelay.accept("0")
+        } else {
+            if symbolTapFlg == false {
+                beforeSymbolTapped()
+            }
+            switch num {
+            case 11:
+                print("tap: =")
+                symbolTapped = 0 //クリア
+            case 12:
+                print("tap: +")
+                symbolTapped = 1 //足し算
+            case 13:
+                print("tap: -")
+                symbolTapped = 2 //引き算
+            case 14:
+                print("tap: ×")
+                symbolTapped = 3 //掛け算
+            case 15:
+                print("tap: ÷")
+                symbolTapped = 4 //割り算
+            case 16:
+                print("tap: %")
+            case 17:
+                print("tap: ±")
+                
+            default:
+                return
+            }
+        }
+        
+        //記号タップNG
+        symbolTapFlg = true
          
     }
     
     func beforeSymbolTapped() {
         
-        switch symbolTapped {
-        case 1:
-            let thisValue = Int(thisValueStr)!
-            var sumValue = Int(sumValueStr)!
-            sumValue = sumValue + thisValue
-            valueRelay.accept(String(sumValue))
+        if symbolTapped > 0 {
+            let thisValue = Double(thisValueStr)!
+            var sumValue = Double(sumValueStr)!
+            switch symbolTapped {
+            case 1:
+                sumValue = sumValue + thisValue
+            case 2:
+                sumValue = sumValue - thisValue
+            case 3:
+                sumValue = sumValue * thisValue
+            case 4:
+                sumValue = sumValue / thisValue
+            default:
+                return
+            }
+            
+            let decimal1 = sumValue.truncatingRemainder(dividingBy: 1)
+            if decimal1 == 0.0 {
+                valueRelay.accept(String(Int(sumValue)))
+            } else {
+                valueRelay.accept(String(sumValue))
+            }
             //今回の値をクリア
             thisValueStr = ""
             //合計を格納
             sumValueStr = String(sumValue)
-        case 2:
-            let thisValue = Int(thisValueStr)!
-            var sumValue = Int(sumValueStr)!
-            sumValue = sumValue - thisValue
-            valueRelay.accept(String(sumValue))
-            //今回の値をクリア
-            thisValueStr = ""
-            //合計を格納
-            sumValueStr = String(sumValue)
-        case 3:
-            let thisValue = Int(thisValueStr)!
-            var sumValue = Int(sumValueStr)!
-            sumValue = sumValue * thisValue
-            valueRelay.accept(String(sumValue))
-            //今回の値をクリア
-            thisValueStr = ""
-            //合計を格納
-            sumValueStr = String(sumValue)
-        case 4:
-            let thisValue = Int(thisValueStr)!
-            //let thisValue = (thisValueStr as NSString).integerValue
-            var sumValue = Int(sumValueStr)!
-            sumValue = sumValue / thisValue
-            valueRelay.accept(String(sumValue))
-            //今回の値をクリア
-            thisValueStr = ""
-            //合計を格納
-            sumValueStr = String(sumValue)
-        default:
-            let thisValue = Int(thisValueStr)!
+                
+        } else {
+            //初回
+            let thisValue = Double(thisValueStr)!
             //今回の値をクリア
             thisValueStr = ""
             //合計を格納
             sumValueStr = String(thisValue)
-            return
         }
+        
     }
-    
     
 }

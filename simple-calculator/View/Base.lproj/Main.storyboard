@@ -411,7 +411,7 @@
                         <outletCollection property="symbolButtons" destination="lam-T3-L8P" collectionClass="NSMutableArray" id="lzF-Mw-Qnt"/>
                         <outletCollection property="symbolButtons" destination="63K-qS-syn" collectionClass="NSMutableArray" id="uVe-a9-xwf"/>
                         <outletCollection property="symbolButtons" destination="tLA-Lo-dUA" collectionClass="NSMutableArray" id="1qB-ai-gaO"/>
-                        <outletCollection property="symbolButtons" destination="kBg-zf-EgF" collectionClass="NSMutableArray" id="szM-fu-w1z"/>
+                        <outletCollection property="numberButtons" destination="kBg-zf-EgF" collectionClass="NSMutableArray" id="n0N-4A-r9e"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
